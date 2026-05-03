@@ -367,7 +367,6 @@ footer a:hover{color:var(--gold);}
         <p class="risk-label-display" id="risk-label">—</p>
         <div class="interp-box" id="interpretation"></div>
         <div class="ref-row">
-          <span class="ref-item">Ference 2018:</span>
           <span class="ref-item"><strong>5,000</strong> mg/dL·yrs — Risk of MI &gt;1%</span>
           <span class="ref-item"><strong>8,000</strong> mg/dL·yrs — mean age of MI</span>
         </div>
@@ -422,32 +421,27 @@ footer a:hover{color:var(--gold);}
       <div class="method-card">
         <div class="mc-label">The Plaque Years concept</div>
         <h3>Cumulative atherogenic exposure</h3>
-        <p>Plaque Years integrates LDL cholesterol concentration (mg/dL) over time (years) — analogous to pack-years in smoking. It captures the dual importance of both magnitude and duration of LDL elevation in driving atherosclerotic plaque development.</p>
+        <p>Plaque Years integrates LDL cholesterol concentration over time — analogous to pack-years in smoking. It captures the dual importance of both magnitude and duration of LDL elevation in driving atherosclerotic plaque development. Using Mendelian randomization and cohort data, Ference et al. identified two key anchors: <strong style="color:var(--text-1);">5,000 mg/dL·years</strong> (MI risk exceeds 1%) and <strong style="color:var(--text-1);">8,000 mg/dL·years</strong> (mean cumulative burden at average age of first MI).</p>
       </div>
       <div class="method-card" style="border-color:rgba(201,168,76,0.25);">
         <div class="mc-label" style="color:var(--gold);">Why now?</div>
-        <h3 style="color:var(--text-1);">2026 ACC/AHA Lipid Guidelines</h3>
-        <p>The 2026 ACC/AHA guidelines place a stronger emphasis on the principle that lower LDL is better — and earlier. They recognize that lifetime atherogenic burden, not just point-in-time LDL levels, drives cardiovascular risk. The guidelines explicitly support the use of illustrative and patient-facing tools to help individuals understand <em>why</em> lipid-lowering medications are being added — making cumulative exposure models like Plaque Years a timely fit for both clinical decision-making and shared decision-making conversations.</p>
-      </div>
-      <div class="method-card">
-        <div class="mc-label">Empirical thresholds</div>
-        <h3>Ference et al. 2018</h3>
-        <p>Using Mendelian randomization and cohort data, Ference et al. identified two key anchors: <strong style="color:var(--text-1);">5,000 mg/dL·years</strong> (MI risk exceeds 1%) and <strong style="color:var(--text-1);">8,000 mg/dL·years</strong> (mean cumulative burden at average age of first MI).</p>
+        <h3 style="color:var(--text-1);">2026 ACC/AHA Hyperlipidemia Guidelines</h3>
+        <p>The 2026 ACC/AHA guidelines place a renewed emphasis on low LDL goals. They recognize that lifetime atherogenic burden, not just point-in-time LDL levels, drives cardiovascular risk. The guidelines explicitly support the use of illustrative and patient-facing tools to help individuals understand <em>why</em> lipid-lowering medications are being added — making cumulative exposure models like Plaque Years a timely fit for both clinical decision-making and shared decision-making conversations.</p>
       </div>
       <div class="method-card">
         <div class="mc-label">Treatment reductions</div>
         <h3>LDL-lowering efficacy</h3>
-        <p>Reductions are applied multiplicatively to the current LDL. <strong style="color:var(--text-1);">High-intensity statin</strong>: ~50% (ACC/AHA). <strong style="color:var(--text-1);">Ezetimibe</strong>: ~20% additional. <strong style="color:var(--text-1);">PCSK9 inhibitor</strong>: ~60% additional. Multiple medications combine multiplicatively.</p>
+        <p>Reductions are applied multiplicatively to the current LDL. <strong style="color:var(--text-1);">High-intensity statin</strong>: ~50%. <strong style="color:var(--text-1);">Ezetimibe</strong>: ~20% additional. <strong style="color:var(--text-1);">PCSK9 inhibitor</strong>: ~60% additional. Multiple medications combine multiplicatively.</p>
       </div>
       <div class="method-card">
         <div class="mc-label">Interpolation model</div>
         <h3>Trajectory estimation</h3>
-        <p>LDL is assumed constant at the earliest known value from birth — meaning without historical readings, plaque years equals current LDL × age. Where multiple time points are provided, LDL is linearly interpolated between readings and the cumulative area is computed via trapezoidal integration.</p>
+        <p>LDL is assumed constant at the earliest known value from birth, meaning without historical readings, plaque years equals current LDL × age. When multiple time points are provided, LDL is linearly interpolated between readings and the cumulative area is computed via trapezoidal integration.</p>
       </div>
       <div class="method-card">
         <div class="mc-label">Cumulative MI risk</div>
         <h3>Log-linear risk after threshold</h3>
-        <p>Ference et al. (JACC, 2018) established that once the cumulative LDL threshold has been exceeded, the risk of experiencing an acute coronary syndrome in response to continued plaque growth increases log-linearly. This calculator models that relationship as a risk that doubles with every additional 1,250 plaque years accumulated beyond the 5,000 threshold — beginning at 1% and rising continuously. Below 5,000 plaque years, risk is reported as &lt;1%.</p>
+        <p>Ference et al. established that once the cumulative LDL threshold has been exceeded, the risk of experiencing an MI in response to continued plaque growth increases log-linearly. This calculator models that relationship as a risk that doubles with every additional 1,250 plaque years accumulated beyond the 5,000 threshold, beginning at 1% and rising continuously. Below 5,000 plaque years, risk is reported as &lt;1%.</p>
       </div>
     </div>
 
@@ -757,7 +751,7 @@ function calculate(){
     // Color scales from gold → red as risk climbs
     const t=Math.min(doublings/5,1); // saturates at ~5 doublings (32%)
     miRiskEl.style.color=t<0.5?'#C9A84C':'#D85A30';
-  }
+5,000  }
 
   // Risk category and needle position are both based on threshold-crossing age
   const risk=getRisk(uCA,age);
