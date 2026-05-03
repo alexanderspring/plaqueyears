@@ -635,7 +635,7 @@ function getRisk(crossAge, currentAge){
   const ca = Math.round(crossAge);
   if(crossAge<=currentAge)  return{label:'Extreme',   color:'#A32D2D',text:'Your cumulative LDL burden has already reached the mean MI threshold. LDL-lowering therapy is strongly indicated.'};
   if(ca<60)                 return{label:'Extreme',   color:'#A32D2D',text:`At your current LDL, you are projected to reach the mean MI threshold at age ${ca}. Aggressive LDL-lowering is strongly recommended.`};
-  if(ca<70)                 return{label:'High',      color:'#D85A30',text:`At your current LDL, you are projected to reach the mean MI threshold at age ${ca}. Statin therapy and lifestyle modification are supported.`};
+  if(ca<70)                 return{label:'High',      color:'#D85A30',text:`At your current LDL, you are projected to reach the mean MI threshold at age ${ca}. Statin therapy and lifestyle modification are encouraged.`};
   if(ca<80)                 return{label:'Elevated',  color:'#BA7517',text:`At your current LDL, you are projected to reach the mean MI threshold at age ${ca}. Lifestyle optimization and closer monitoring are recommended.`};
   if(ca<90)                 return{label:'Near-ideal',color:'#3B6D11',text:`At your current LDL, you are projected to reach the mean MI threshold at age ${ca}. Continue current management.`};
   return                          {label:'Optimal',   color:'#1D9E75',text:`At your current LDL, you are projected to reach the mean MI threshold after age ${ca}. Excellent cardiovascular risk profile.`};
