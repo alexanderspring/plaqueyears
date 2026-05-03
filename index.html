@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plaque Years Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#090E1A;
+  --bg-mid:#0F1628;
+  --bg-card:#141D35;
+  --border:rgba(255,255,255,0.07);
+  --border-md:rgba(255,255,255,0.13);
+  --text-1:#EEE9E0;
+  --text-2:#8A97B8;
+  --text-3:#4D5C7A;
+  --gold:#C9A84C;
+  --gold-dim:rgba(201,168,76,0.15);
+  --radius:10px;
+  --radius-lg:16px;
+  --header-h:60px;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text-1);font-family:'adobe-garamond-pro','Adobe Garamond Pro','AGaramondPro','Garamond','EB Garamond',Georgia,serif;font-size:15px;line-height:1.6;min-height:100vh;}
+
+/* HEADER */
+header{
+  position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 40px;height:var(--header-h);
+  background:rgba(9,14,26,0.9);backdrop-filter:blur(12px);
+  border-bottom:0.5px solid var(--border);
+}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-mark{width:30px;height:30px;border-radius:50%;overflow:hidden;flex-shrink:0;}
+.logo-mark svg{width:30px;height:30px;display:block;}
+.logo-text{font-family:'Spectral',serif;font-size:17px;font-weight:600;letter-spacing:0.01em;color:var(--text-1);}
+.header-badge{font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--gold);background:var(--gold-dim);padding:4px 10px;border-radius:20px;border:0.5px solid rgba(201,168,76,0.3);}
+
+/* HERO */
+.hero{position:relative;overflow:hidden;padding:80px 40px 64px;text-align:center;}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.04) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse 80% 60% at 50% 50%,black,transparent);}
+.hero-glow{position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:300px;background:radial-gradient(ellipse,rgba(201,168,76,0.07) 0%,transparent 70%);pointer-events:none;}
+.hero h1{font-family:'Spectral',serif;font-size:clamp(40px,6vw,72px);font-weight:600;line-height:1.1;letter-spacing:-0.02em;color:var(--text-1);margin-bottom:12px;position:relative;}
+.hero-h2{font-family:'Spectral',serif;font-size:clamp(16px,2vw,22px);font-weight:300;font-style:italic;color:var(--text-2);margin-bottom:24px;position:relative;}
+.hero-h2 em{font-style:normal;color:var(--gold);}
+.hero-sub{font-size:16px;font-weight:300;color:var(--text-2);max-width:540px;margin:0 auto;line-height:1.75;position:relative;}
+
+/* MAIN TWO-COLUMN LAYOUT */
+.page-wrap{max-width:1160px;margin:0 auto;padding:0 32px 80px;}
+
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:14px;border-bottom:0.5px solid var(--border);}
+.section-num{display:none;}
+.section-title{font-size:15px;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-2);}
+
+/* Two-col grid: left = inputs, right = sticky chart */
+.calc-grid{
+  display:grid;
+  grid-template-columns:1fr 420px;
+  gap:28px;
+  align-items:start;
+  margin-top:40px;
+}
+.calc-left{min-width:0;}
+.calc-right{
+  position:sticky;
+  top:calc(var(--header-h) + 16px);
+}
+
+/* CARDS */
+.calc-card{background:var(--bg-card);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:22px;margin-bottom:14px;}
+.calc-card-title{font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);margin-bottom:14px;}
+
+label{font-size:12px;color:var(--text-2);display:block;margin-bottom:6px;}
+input[type=number]{width:100%;padding:10px 14px;background:var(--bg-mid);border:0.5px solid var(--border-md);border-radius:var(--radius);color:var(--text-1);font-family:'adobe-garamond-pro','Adobe Garamond Pro',Garamond,Georgia,serif;font-size:15px;outline:none;transition:border-color 0.2s;-moz-appearance:textfield;}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+input[type=number]:focus{border-color:var(--gold);}
+.input-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+
+.unit-toggle{display:inline-flex;border:0.5px solid var(--border-md);border-radius:var(--radius);overflow:hidden;}
+.unit-toggle button{background:none;border:none;padding:6px 14px;font-family:'adobe-garamond-pro','Adobe Garamond Pro',Garamond,Georgia,serif;font-size:12px;cursor:pointer;color:var(--text-2);transition:all 0.15s;}
+.unit-toggle button.active{background:var(--gold);color:#090E1A;font-weight:600;}
+
+/* METRICS */
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.metric{background:var(--bg-mid);border:0.5px solid var(--border);border-radius:var(--radius);padding:14px;}
+.metric .m-label{font-size:10px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-3);margin-bottom:6px;}
+.metric .m-val{font-family:'Spectral',serif;font-size:22px;font-weight:600;color:var(--text-1);line-height:1;}
+.metric .m-val.sm{font-size:16px;}
+.metric-hero .m-val-hero{font-family:'Spectral',serif;font-size:36px;font-weight:600;color:var(--text-1);line-height:1;}
+.m-label-sm{font-size:9px;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-3);margin-bottom:6px;}
+
+/* RISK */
+.risk-track{position:relative;height:6px;border-radius:3px;margin:10px 0 6px;overflow:hidden;background:linear-gradient(to right,#1D9E75 0%,#1D9E75 22%,#3B6D11 22%,#3B6D11 35%,#BA7517 35%,#BA7517 56%,#D85A30 56%,#D85A30 84%,#A32D2D 84%,#A32D2D 100%);}
+.risk-needle{position:absolute;top:-4px;width:3px;height:14px;background:var(--text-1);border-radius:2px;transform:translateX(-50%);transition:left 0.5s ease;}
+.risk-ticks{display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);margin-bottom:10px;}
+.risk-label-display{font-size:15px;font-weight:500;margin:4px 0;}
+.interp-box{font-size:13px;color:var(--text-2);line-height:1.7;padding:11px 13px;background:var(--bg-mid);border-radius:var(--radius);margin-top:12px;border-left:2px solid;}
+.ref-row{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;}
+.ref-item{font-size:11px;color:var(--text-3);}
+.ref-item strong{color:var(--text-2);font-weight:500;}
+
+/* ADVANCED */
+.adv-toggle{font-size:12px;color:var(--text-2);cursor:pointer;border:0.5px dashed var(--border-md);border-radius:var(--radius);padding:8px 14px;background:none;width:100%;text-align:left;margin-bottom:10px;font-family:'adobe-garamond-pro','Adobe Garamond Pro',Garamond,Georgia,serif;transition:border-color 0.2s,color 0.2s;}
+.adv-toggle:hover{border-color:var(--gold);color:var(--gold);}
+.hist-entry{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+.hist-entry input[type=number]{flex:1;}
+.hist-entry .rm-btn{background:none;border:0.5px solid var(--border-md);border-radius:var(--radius);padding:7px 11px;font-size:12px;cursor:pointer;color:var(--text-2);font-family:'adobe-garamond-pro','Adobe Garamond Pro',Garamond,Georgia,serif;transition:border-color 0.2s,color 0.2s;white-space:nowrap;}
+.hist-entry .rm-btn:hover{border-color:#A32D2D;color:#A32D2D;}
+.add-hist-btn{font-size:12px;border:0.5px dashed var(--border-md);border-radius:var(--radius);padding:7px 13px;background:none;cursor:pointer;color:var(--text-2);font-family:'adobe-garamond-pro','Adobe Garamond Pro',Garamond,Georgia,serif;margin-top:4px;transition:border-color 0.2s,color 0.2s;}
+.add-hist-btn:hover{border-color:var(--gold);color:var(--gold);}
+
+/* CHART (right panel) */
+.chart-card{background:var(--bg-card);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:22px;}
+.legend-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
+.legend-row span{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-2);}
+.l-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.l-dash{width:16px;height:0;border-top:2px dashed;flex-shrink:0;}
+.l-solid{width:16px;height:2px;flex-shrink:0;}
+
+/* TREATMENT */
+.tx-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;}
+.tx-card{border:0.5px solid var(--border);border-radius:var(--radius);padding:13px;cursor:pointer;user-select:none;transition:border-color 0.2s;}
+.tx-card:hover{border-color:var(--border-md);}
+.tx-card.active{border-width:1px;}
+.tx-name{font-size:11px;font-weight:500;color:var(--text-1);margin-bottom:4px;display:flex;align-items:center;gap:5px;}
+.tx-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.tx-pct{font-family:'Spectral',serif;font-size:20px;font-weight:600;margin:5px 0 2px;}
+.tx-sub{font-size:11px;color:var(--text-3);}
+.tx-summary-bar{background:var(--bg-mid);border-radius:var(--radius);padding:11px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px;border:0.5px solid var(--border);}
+.tx-sum-item .ts-label{font-size:11px;color:var(--text-3);}
+.tx-sum-item .ts-val{font-size:13px;font-weight:500;color:var(--text-1);margin-top:2px;}
+.tx-statement{font-size:13px;line-height:1.75;color:var(--text-2);padding:13px 15px;border-radius:var(--radius);border:0.5px solid var(--border);background:var(--bg-mid);}
+.tx-statement b{font-weight:500;color:var(--text-1);}
+
+/* METHODOLOGY (full width below grid) */
+.method-section{margin-top:60px;padding-top:48px;border-top:0.5px solid var(--border);}
+.method-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px;}
+.method-card{background:var(--bg-card);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:22px;}
+.method-card h3{font-family:'Spectral',serif;font-size:16px;font-weight:400;color:var(--text-1);margin-bottom:8px;}
+.method-card p{font-size:13px;color:var(--text-2);line-height:1.75;}
+.method-card .mc-label{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+
+.attribution{margin-top:32px;padding:20px 24px;border:0.5px solid var(--border);border-radius:var(--radius-lg);background:var(--bg-card);display:flex;align-items:center;gap:16px;}
+.attr-line{width:32px;height:0.5px;background:var(--gold);flex-shrink:0;}
+.attr-text{font-family:'Spectral',serif;font-style:italic;font-size:15px;color:var(--text-2);}
+.attr-text strong{font-style:normal;font-weight:600;color:var(--text-1);}
+
+.refs-list{margin-top:20px;}
+.refs-list li{font-size:12px;color:var(--text-3);line-height:1.65;padding:10px 0;border-bottom:0.5px solid var(--border);list-style:none;}
+.refs-list li:last-child{border-bottom:none;}
+.disclaimer{font-size:12px;color:var(--text-1);margin-top:18px;line-height:1.7;}
+
+/* FOOTER */
+footer{padding:28px 40px;border-top:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:var(--bg-mid);}
+footer p{font-size:12px;color:var(--text-3);}
+footer a{color:var(--text-3);text-decoration:none;}
+footer a:hover{color:var(--gold);}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.hero h1,.hero-h2,.hero-sub{animation:fadeUp 0.7s ease both;}
+.hero h1{animation-delay:0.05s;}.hero-h2{animation-delay:0.2s;}.hero-sub{animation-delay:0.35s;}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .calc-grid{grid-template-columns:1fr;}
+  .calc-right{position:static;}
+  .method-grid{grid-template-columns:1fr;}
+}
+@media(max-width:600px){
+  header{padding:0 20px;}
+  .page-wrap{padding:0 16px 60px;}
+  .hero{padding:56px 20px 40px;}
+  .metrics-grid{grid-template-columns:1fr 1fr;}
+  .tx-grid{grid-template-columns:1fr 1fr;}
+  .input-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-mark">
+      <!-- Artery cross-section: outer wall (pink), plaque (gold), stenosed lumen (dark red) -->
+      <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="15" cy="15" r="15" fill="#C05070"/>
+        <circle cx="15" cy="15" r="12" fill="#1A2444"/>
+        <circle cx="15" cy="15" r="11.5" fill="#D4960E"/>
+        <ellipse cx="11.5" cy="10.5" rx="5.5" ry="5" fill="#8A1C30"/>
+        <ellipse cx="10.5" cy="9.5" rx="2.5" ry="2" fill="#A82840" opacity="0.6"/>
+      </svg>
+    </div>
+    <span class="logo-text">Plaque Years</span>
+  </div>
+  <span class="header-badge">Clinical Calculator · V1</span>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <h1>Plaque Years</h1>
+  <p class="hero-h2">your cumulative atherogenic burden, <em>quantified</em></p>
+  <p class="hero-sub">Atherosclerosis is driven not just by how high your LDL is — but by how long it has been elevated. Plaque Years integrates both the magnitude and duration of LDL exposure into a single measure of lifetime atherogenic burden.</p>
+</section>
+
+<!-- MAIN -->
+<div class="page-wrap">
+
+  <!-- Artery progression diagram -->
+  <div style="margin-top:0;margin-bottom:40px;">
+<div style="background:var(--bg-card);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:28px 24px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+
+        <!-- Slice 1: No plaque, 0 PY -->
+        <div style="flex:1;min-width:80px;display:flex;flex-direction:column;align-items:center;gap:10px;">
+          <svg viewBox="0 0 100 100" width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="48" fill="#C76080"/>
+            <circle cx="50" cy="50" r="42" fill="#D4728A"/>
+            <circle cx="50" cy="50" r="38" fill="#C05070"/>
+            <circle cx="50" cy="50" r="32" fill="#8A1C30"/>
+            <ellipse cx="44" cy="44" rx="10" ry="8" fill="#A82840" opacity="0.5"/>
+          </svg>
+          <div style="text-align:center;">
+            <div style="font-family:'Spectral',serif;font-size:18px;font-weight:600;color:var(--text-1);line-height:1;">0</div>
+            <div style="font-size:10px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-3);margin-top:3px;">Plaque Years</div>
+            <div style="font-size:11px;color:var(--text-2);margin-top:5px;">No plaque</div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;padding-top:40px;color:var(--text-3);font-size:18px;">&#x203a;</div>
+
+        <!-- Slice 2: ~25% occlusion, 2500 PY -->
+        <div style="flex:1;min-width:80px;display:flex;flex-direction:column;align-items:center;gap:10px;">
+          <svg viewBox="0 0 100 100" width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="48" fill="#C76080"/>
+            <circle cx="50" cy="50" r="42" fill="#D4728A"/>
+            <circle cx="50" cy="50" r="38" fill="#C05070"/>
+            <path d="M 50 88 a 38 38 0 0 1 -28 -28 a 20 20 0 0 0 28 28 z" fill="#D4960E"/>
+            <ellipse cx="32" cy="70" rx="12" ry="9" fill="#E8B830" opacity="0.8"/>
+            <ellipse cx="52" cy="44" rx="24" ry="25" fill="#8A1C30"/>
+            <ellipse cx="47" cy="38" rx="9" ry="7" fill="#A82840" opacity="0.5"/>
+          </svg>
+          <div style="text-align:center;">
+            <div style="font-family:'Spectral',serif;font-size:18px;font-weight:600;color:var(--gold);line-height:1;">2,500</div>
+            <div style="font-size:10px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-3);margin-top:3px;">Plaque Years</div>
+            <div style="font-size:11px;color:var(--text-2);margin-top:5px;">Early atherosclerosis</div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;padding-top:40px;color:var(--text-3);font-size:18px;">&#x203a;</div>
+
+        <!-- Slice 3: ~70% occlusion, 5000 PY -->
+        <div style="flex:1;min-width:80px;display:flex;flex-direction:column;align-items:center;gap:10px;">
+          <svg viewBox="0 0 100 100" width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="48" fill="#C76080"/>
+            <circle cx="50" cy="50" r="42" fill="#D4728A"/>
+            <circle cx="50" cy="50" r="38" fill="#D4960E"/>
+            <ellipse cx="50" cy="58" rx="26" ry="20" fill="#E8B830" opacity="0.85"/>
+            <ellipse cx="48" cy="62" rx="16" ry="11" fill="#F0C840" opacity="0.6"/>
+            <path d="M 14 42 a 38 38 0 0 1 72 0 a 28 28 0 0 0 -72 0 z" fill="#C05070" opacity="0.65"/>
+            <ellipse cx="52" cy="34" rx="14" ry="13" fill="#8A1C30"/>
+            <ellipse cx="47" cy="30" rx="5" ry="4" fill="#A82840" opacity="0.5"/>
+          </svg>
+          <div style="text-align:center;">
+            <div style="font-family:'Spectral',serif;font-size:18px;font-weight:600;color:#BA7517;line-height:1;">5,000</div>
+            <div style="font-size:10px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-3);margin-top:3px;">Plaque Years</div>
+            <div style="font-size:11px;color:#BA7517;margin-top:5px;">MI risk &gt;1%</div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;padding-top:40px;color:var(--text-3);font-size:18px;">&#x203a;</div>
+
+        <!-- Slice 4: Rupture + near-total occlusion, 8000 PY -->
+        <div style="flex:1;min-width:80px;display:flex;flex-direction:column;align-items:center;gap:10px;">
+          <svg viewBox="0 0 100 100" width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <!-- Outer wall, distorted by pressure -->
+            <circle cx="50" cy="50" r="48" fill="#C76080"/>
+            <circle cx="50" cy="50" r="42" fill="#B84060"/>
+            <!-- Dense plaque core, nearly filling lumen -->
+            <circle cx="50" cy="50" r="38" fill="#C8880A"/>
+            <!-- Lipid pool interior -->
+            <ellipse cx="50" cy="56" rx="26" ry="21" fill="#E8B830" opacity="0.8"/>
+            <ellipse cx="48" cy="60" rx="16" ry="12" fill="#F5D060" opacity="0.6"/>
+            <!-- Calcification nodules -->
+            <ellipse cx="32" cy="66" rx="8" ry="5" fill="#EDE8CC" opacity="0.9"/>
+            <ellipse cx="67" cy="62" rx="6" ry="4" fill="#EDE8CC" opacity="0.85"/>
+            <ellipse cx="72" cy="48" rx="4" ry="3" fill="#EDE8CC" opacity="0.75"/>
+            <!-- Fibrous cap — thin, torn -->
+            <path d="M 14 44 a 38 38 0 0 1 72 0" fill="#B84060" opacity="0.5"/>
+            <!-- Major rupture: wide jagged tear -->
+            <path d="M 42 14 L 38 22 L 46 30 L 38 38 L 46 46" stroke="#3A0610" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M 44 14 L 48 24 L 42 30 L 50 40" stroke="#5A0A18" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Large thrombus erupting from rupture site, spreading across lumen -->
+            <ellipse cx="44" cy="17" rx="13" ry="10" fill="#5A0A18" opacity="0.97"/>
+            <ellipse cx="38" cy="13" rx="8" ry="6" fill="#6A0A18" opacity="0.9"/>
+            <ellipse cx="52" cy="14" rx="7" ry="5" fill="#7A1020" opacity="0.85"/>
+            <!-- Thrombus tentacles spreading inward -->
+            <ellipse cx="34" cy="28" rx="9" ry="6" fill="#6A0A18" opacity="0.8" transform="rotate(-20,34,28)"/>
+            <ellipse cx="58" cy="24" rx="8" ry="5" fill="#7A1020" opacity="0.75" transform="rotate(15,58,24)"/>
+            <ellipse cx="46" cy="32" rx="10" ry="7" fill="#5A0A18" opacity="0.7"/>
+            <!-- Almost no residual lumen — tiny slit -->
+            <ellipse cx="70" cy="42" rx="5" ry="4" fill="#8A1C30" opacity="0.9"/>
+          </svg>
+          <div style="text-align:center;">
+            <div style="font-family:'Spectral',serif;font-size:18px;font-weight:600;color:#A32D2D;line-height:1;">8,000</div>
+            <div style="font-size:10px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-3);margin-top:3px;">Plaque Years</div>
+            <div style="font-size:11px;color:#A32D2D;margin-top:5px;">Rupture · Mean MI age</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Full-width section break before calculator -->
+  <div style="margin-top:48px;padding-top:32px;border-top:0.5px solid var(--border);margin-bottom:28px;">
+    <h2 style="font-size:15px;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-2);font-family:'adobe-garamond-pro','Adobe Garamond Pro',Garamond,Georgia,serif;">Calculate your Plaque Years</h2>
+  </div>
+
+  <div class="calc-grid">
+
+    <!-- LEFT COLUMN -->
+    <div class="calc-left">
+
+      <!-- Patient inputs -->
+      <div class="calc-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <p class="calc-card-title" style="margin-bottom:0;">Patient inputs</p>
+          <div class="unit-toggle">
+            <button class="active" id="btn-mgdl" onclick="setUnit('mgdl')">mg/dL</button>
+            <button id="btn-mmol" onclick="setUnit('mmol')">mmol/L</button>
+          </div>
+        </div>
+        <div class="input-row">
+          <div><label for="age-input">Age (years)</label><input type="number" id="age-input" min="1" max="100" value="45" oninput="onPatientInput()"></div>
+          <div><label for="ldl-input" id="ldl-label">Current LDL (mg/dL)</label><input type="number" id="ldl-input" min="30" max="400" value="130" oninput="onPatientInput()"></div>
+        </div>
+        <button class="adv-toggle" onclick="toggleAdvanced()">+ Add historical LDL readings (optional)</button>
+        <div id="advanced-panel" style="display:none;">
+          <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);margin-bottom:10px;">Historical readings</p>
+          <div id="history-list"></div>
+          <button class="add-hist-btn" onclick="addHistoryEntry()">+ Add reading</button>
+          <p style="font-size:11px;color:var(--text-3);margin-top:8px;line-height:1.6;">LDL is linearly interpolated between all entered time points, held constant at the earliest reading from birth.</p>
+        </div>
+      </div>
+
+      <!-- Metrics -->
+      <div class="metrics-grid">
+        <div class="metric"><div class="m-label">Plaque Years now</div><div class="m-val" id="ldl-years-val">—</div></div>
+        <div class="metric"><div class="m-label">Age at first MI</div><div class="m-val" id="cross-age-val">—</div></div>
+        <div class="metric"><div class="m-label">Age at MI risk &gt;1%</div><div class="m-val" id="cross-age-5000-val">—</div></div>
+        <div class="metric"><div class="m-label">Cumulative MI Risk</div><div class="m-val" id="mi-risk-val">—</div></div>
+      </div>
+
+      <!-- Risk gauge -->
+      <div class="calc-card">
+        <p class="calc-card-title">Risk category</p>
+        <div class="risk-track"><div class="risk-needle" id="risk-needle"></div></div>
+        <div class="risk-ticks"><span>Optimal</span><span>Near-ideal</span><span>Elevated</span><span>High</span><span>Extreme</span></div>
+        <p class="risk-label-display" id="risk-label">—</p>
+        <div class="interp-box" id="interpretation"></div>
+        <div class="ref-row">
+          <span class="ref-item">Ference 2018:</span>
+          <span class="ref-item"><strong>5,000</strong> mg/dL·yrs — Risk of MI &gt;1%</span>
+          <span class="ref-item"><strong>8,000</strong> mg/dL·yrs — mean age of MI</span>
+        </div>
+      </div>
+
+      <!-- Treatment section -->
+      <div class="section-header" style="margin-top:28px;">
+        <span class="section-num">02</span>
+        <span class="section-title">Treatment projection</span>
+      </div>
+
+      <div class="calc-card">
+        <div class="input-row" style="margin-bottom:14px;">
+          <div><label for="tx-age">Treatment start age</label><input type="number" id="tx-age" min="18" max="119" value="45" oninput="calculate()" onblur="onTxAgeBlur()"></div>
+          <div style="display:flex;align-items:flex-end;padding-bottom:2px;"><p style="font-size:12px;color:var(--text-3);line-height:1.6;">Select medications. One combined trajectory is shown on the chart.</p></div>
+        </div>
+        <div class="tx-grid" id="tx-cards"></div>
+        <div id="tx-summary-wrap" style="display:none;">
+          <div class="tx-summary-bar">
+            <div class="tx-sum-item"><div class="ts-label">Combined LDL reduction</div><div class="ts-val" id="tx-combined-pct">—</div></div>
+            <div class="tx-sum-item"><div class="ts-label">Treated LDL</div><div class="ts-val" id="tx-treated-ldl">—</div></div>
+            <div class="tx-sum-item"><div class="ts-label">Age at first MI (treated)</div><div class="ts-val" id="tx-cross-age">—</div></div>
+            <div class="tx-sum-item"><div class="ts-label">Years gained</div><div class="ts-val" id="tx-years-gained">—</div></div>
+          </div>
+          <div class="tx-statement" id="tx-statement"></div>
+        </div>
+      </div>
+
+    </div><!-- /calc-left -->
+
+    <!-- RIGHT COLUMN (sticky chart) -->
+    <div class="calc-right">
+      <div class="chart-card">
+        <p class="calc-card-title">Cumulative exposure over time</p>
+        <div style="position:relative;width:100%;height:400px;">
+          <canvas id="exposureChart" role="img" aria-label="Plaque Years chart ending at the projected age of first MI.">Cumulative LDL exposure chart.</canvas>
+        </div>
+        <div class="legend-row" id="chart-legend"></div>
+      </div>
+    </div>
+
+  </div><!-- /calc-grid -->
+
+  <!-- METHODOLOGY (full width) -->
+  <div class="method-section">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <span class="section-title">Methodology</span>
+    </div>
+
+    <div class="method-grid">
+      <div class="method-card">
+        <div class="mc-label">The Plaque Years concept</div>
+        <h3>Cumulative atherogenic exposure</h3>
+        <p>Plaque Years integrates LDL cholesterol concentration (mg/dL) over time (years) — analogous to pack-years in smoking. It captures the dual importance of both magnitude and duration of LDL elevation in driving atherosclerotic plaque development.</p>
+      </div>
+      <div class="method-card" style="border-color:rgba(201,168,76,0.25);">
+        <div class="mc-label" style="color:var(--gold);">Why now?</div>
+        <h3 style="color:var(--text-1);">2026 ACC/AHA Lipid Guidelines</h3>
+        <p>The 2026 ACC/AHA guidelines place a stronger emphasis on the principle that lower LDL is better — and earlier. They recognize that lifetime atherogenic burden, not just point-in-time LDL levels, drives cardiovascular risk. The guidelines explicitly support the use of illustrative and patient-facing tools to help individuals understand <em>why</em> lipid-lowering medications are being added — making cumulative exposure models like Plaque Years a timely fit for both clinical decision-making and shared decision-making conversations.</p>
+      </div>
+      <div class="method-card">
+        <div class="mc-label">Empirical thresholds</div>
+        <h3>Ference et al. 2018</h3>
+        <p>Using Mendelian randomization and cohort data, Ference et al. identified two key anchors: <strong style="color:var(--text-1);">5,000 mg/dL·years</strong> (MI risk exceeds 1%) and <strong style="color:var(--text-1);">8,000 mg/dL·years</strong> (mean cumulative burden at average age of first MI).</p>
+      </div>
+      <div class="method-card">
+        <div class="mc-label">Treatment reductions</div>
+        <h3>LDL-lowering efficacy</h3>
+        <p>Reductions are applied multiplicatively to the current LDL. <strong style="color:var(--text-1);">High-intensity statin</strong>: ~50% (ACC/AHA). <strong style="color:var(--text-1);">Ezetimibe</strong>: ~20% additional. <strong style="color:var(--text-1);">PCSK9 inhibitor</strong>: ~60% additional. Multiple medications combine multiplicatively.</p>
+      </div>
+      <div class="method-card">
+        <div class="mc-label">Interpolation model</div>
+        <h3>Trajectory estimation</h3>
+        <p>LDL is assumed constant at the earliest known value from birth — meaning without historical readings, plaque years equals current LDL × age. Where multiple time points are provided, LDL is linearly interpolated between readings and the cumulative area is computed via trapezoidal integration.</p>
+      </div>
+      <div class="method-card">
+        <div class="mc-label">Cumulative MI risk</div>
+        <h3>Log-linear risk after threshold</h3>
+        <p>Ference et al. (JACC, 2018) established that once the cumulative LDL threshold has been exceeded, the risk of experiencing an acute coronary syndrome in response to continued plaque growth increases log-linearly. This calculator models that relationship as a risk that doubles with every additional 1,250 plaque years accumulated beyond the 5,000 threshold — beginning at 1% and rising continuously. Below 5,000 plaque years, risk is reported as &lt;1%.</p>
+      </div>
+    </div>
+
+    <!-- Attribution -->
+    <div class="attribution">
+      <div class="attr-line"></div>
+      <p class="attr-text">Created by <strong>Alexander M. Spring, MD</strong></p>
+    </div>
+
+    <!-- References -->
+    <p style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3);margin-top:28px;margin-bottom:12px;">References</p>
+    <ul class="refs-list">
+      <li>Blumenthal RS, Morris PB, et al. <em>2026 ACC/AHA/AACVPR/ABC/ACPM/ADA/AGS/APhA/ASPC/NLA/PCNA Guideline on the Management of Dyslipidemia.</em> J Am Coll Cardiol. 2026. doi:10.1016/j.jacc.2026.02.4872. Also published in Circulation. doi:10.1161/CIR.0000000000001423</li>
+      <li>Domanski MJ, et al. <em>Association of Cumulative LDL-C Exposure During Young Adulthood and Middle Age with Incident CVD.</em> JAMA Cardiol. 2020.</li>
+      <li>Ference BA, et al. <em>Low-density lipoproteins cause atherosclerotic cardiovascular disease.</em> Eur Heart J. 2017;38(32):2459–2472.</li>
+      <li>Ference BA, et al. <em>Impact of Lipids on Cardiovascular Health: JACC Health Promotion Series.</em> J Am Coll Cardiol. 2018;72(10):1141–1156. doi:10.1016/j.jacc.2018.06.046</li>
+      <li>Ference BA, et al. <em>Reduction of low-density lipoprotein-cholesterol and cardiovascular events with proprotein convertase subtilisin-kexin type 9 (PCSK9) inhibitors.</em> JAMA. 2018.</li>
+      <li>Grundy SM, et al. <em>2018 AHA/ACC Guideline on the Management of Blood Cholesterol.</em> J Am Coll Cardiol. 2019;73(24):e285–e350.</li>
+    </ul>
+
+    <p class="disclaimer"><strong style="color:var(--text-1);">Disclaimer:</strong> This calculator is intended for educational and clinical discussion purposes only. It is not a validated clinical decision support tool and should not replace individualized risk assessment or clinical judgment. Thresholds are derived from population-level data and may not apply to all individuals.</p>
+  </div>
+</div><!-- /page-wrap -->
+
+<!-- FOOTER -->
+<footer>
+  <p>Plaque-Years · Clinical Calculator V1 · Based on Ference et al. 2018</p>
+  <p>Created by Alexander M. Spring, MD · <a href="https://pubmed.ncbi.nlm.nih.gov/28444290/" target="_blank">Source paper ↗</a></p>
+</footer>
+
+<script>
+let unit='mgdl',chart=null,historyEntries=[];
+const BIRTH_LDL=50,OPTIMAL_LDL=55,MAX_AGE=120;
+const T={optimal:2750,nearIdeal:3500,borderline:5000,elevated:8000};
+
+// Risk gauge now maps threshold-crossing age, not LDL-years (SEGMENTS removed)
+const MEDS=[
+  {id:'statin',name:'High-intensity statin',reduction:0.50,color:'#2EC4A0',active:false},
+  {id:'eze',   name:'Ezetimibe',            reduction:0.20,color:'#7B72E9',active:false},
+  {id:'pcsk9i',name:'PCSK9i',               reduction:0.60,color:'#C9A84C',active:false},
+];
+const TX_LINE_COLOR='#E06B3F';
+
+function combinedMultiplier(){return MEDS.reduce((a,m)=>m.active?a*(1-m.reduction):a,1);}
+function anyActive(){return MEDS.some(m=>m.active);}
+function currentAge(){return parseInt(document.getElementById('age-input').value)||18;}
+
+function capHistoryAges(){
+  const age=currentAge();
+  historyEntries.forEach(e=>{
+    const el=document.getElementById('hist-age-'+e.id);
+    if(el){el.max=age;if(parseInt(el.value)>age)el.value=age;}
+  });
+}
+// Any change to core patient inputs: reset treatment, cap history ages, recalculate
+function onPatientInput(){resetTreatment();capHistoryAges();calculate();}
+// Any change to a historical reading: reset treatment, recalculate
+function onHistInput(){resetTreatment();calculate();}
+// Historical age field: also enforce max = current patient age
+function onHistAgeInput(id){
+  const age=currentAge();
+  const el=document.getElementById('hist-age-'+id);
+  if(el&&parseInt(el.value)>age)el.value=age;
+  resetTreatment();
+  calculate();
+}
+function onTxAgeBlur(){const age=currentAge();const el=document.getElementById('tx-age');if(isNaN(parseInt(el.value))||parseInt(el.value)<age)el.value=age;calculate();}
+
+function resetTreatment(){
+  MEDS.forEach(m=>m.active=false);
+  const age=currentAge();
+  const el=document.getElementById('tx-age');
+  if(el){el.value=age;el.min=age;}
+  updateMedCardStyles(); // reset card visuals without recreating DOM
+}
+
+function calcCrossAge(ly,age,ldl){
+  if(ly>=T.elevated)return age;
+  if(ldl<=0)return MAX_AGE+1;
+  return age+(T.elevated-ly)/ldl;
+}
+function calcTxCrossAge(ly,age,ldl,txStart,mult){
+  const s=Math.max(age,txStart);
+  const lyS=ly+ldl*(s-age);
+  if(lyS>=T.elevated)return s;
+  const tl=ldl*mult;
+  if(tl<=0)return MAX_AGE+1;
+  return s+(T.elevated-lyS)/tl;
+}
+function formatAge(a,age){
+  if(a<=age)return'Already exceeded';
+  if(a>MAX_AGE)return'>'+MAX_AGE;
+  return'Age '+Math.round(a);
+}
+// Needle maps threshold-crossing age → gauge position (left=optimal, right=high)
+// Breakpoints (crossing age → gauge %):
+//   already exceeded → 97%  | <60 → 84-97%  | 60-70 → 56-84%
+//   70-80 → 35-56%           | 80-90 → 22-35% | ≥90 → 0-22%
+function needlePct(crossAge, currentAge){
+  if(crossAge<=currentAge) return 97;
+  if(crossAge>=120) return 3;
+  const ca=crossAge;
+  if(ca<60){
+    const t=Math.max((ca-currentAge)/Math.max(60-currentAge,1),0);
+    return 97-t*13;          // 97 at currentAge → 84 at 60
+  }
+  if(ca<70) return 84-((ca-60)/10)*28;  // 84→56
+  if(ca<80) return 56-((ca-70)/10)*21;  // 56→35
+  if(ca<90) return 35-((ca-80)/10)*13;  // 35→22
+  return 22-Math.min((ca-90)/30,1)*22;  // 22→0 at age 120
+}
+function setUnit(u){
+  const prev=unit;unit=u;
+  document.getElementById('btn-mgdl').classList.toggle('active',u==='mgdl');
+  document.getElementById('btn-mmol').classList.toggle('active',u==='mmol');
+  document.getElementById('ldl-label').textContent=u==='mgdl'?'Current LDL (mg/dL)':'Current LDL (mmol/L)';
+  const inp=document.getElementById('ldl-input');
+  const v=parseFloat(inp.value);
+  if(!isNaN(v)){
+    if(prev==='mgdl'&&u==='mmol')inp.value=(v/38.67).toFixed(2);
+    else if(prev==='mmol'&&u==='mgdl')inp.value=Math.round(v*38.67);
+  }
+  historyEntries.forEach(e=>{
+    const hi=document.getElementById('hist-ldl-'+e.id);
+    if(hi){const hv=parseFloat(hi.value);if(!isNaN(hv)){
+      if(prev==='mgdl'&&u==='mmol')hi.value=(hv/38.67).toFixed(2);
+      else if(prev==='mmol'&&u==='mgdl')hi.value=Math.round(hv*38.67);
+    }}
+  });
+  calculate();
+}
+function toggleAdvanced(){const p=document.getElementById('advanced-panel');p.style.display=p.style.display==='none'?'block':'none';}
+let ec=0;
+function addHistoryEntry(){
+  ec++;
+  const id=ec;
+  historyEntries.push({id});
+  // Append new entry without touching existing ones (preserves typed values)
+  const age=currentAge();
+  const c=document.getElementById('history-list');
+  const d=document.createElement('div');
+  d.className='hist-entry';
+  d.id='hist-entry-'+id;
+  d.innerHTML=`<input type="number" id="hist-age-${id}" placeholder="Age" min="1" max="${age}" style="max-width:100px;" oninput="onHistAgeInput(${id})"><input type="number" id="hist-ldl-${id}" placeholder="${unit==='mgdl'?'LDL mg/dL':'LDL mmol/L'}" min="0" step="${unit==='mmol'?'0.01':'1'}" oninput="onHistInput()"><button class="rm-btn" onclick="removeHistoryEntry(${id})">Remove</button>`;
+  c.appendChild(d);
+}
+function removeHistoryEntry(id){
+  historyEntries=historyEntries.filter(e=>e.id!==id);
+  // Remove only this entry's DOM element — never wipe the whole list
+  const el=document.getElementById('hist-entry-'+id);
+  if(el)el.remove();
+  calculate();
+}
+
+function toLdl(v){return unit==='mmol'?v*38.67:v;}
+function buildAnchors(age,ldl,history){
+  // Conservative: LDL assumed constant at the earliest known value from birth.
+  // With no history: plaque years = ldl × age (via log-linear with flat segment).
+  // With history: holds at first reading's LDL before that age.
+  const sorted=[...history].sort((a,b)=>a.age-b.age);
+  const birthLdl=sorted.length>0?sorted[0].ldl:ldl;
+  return [{age:0,ldl:birthLdl},...sorted,{age,ldl}];
+}
+function ldlAtAge(a,anchors){
+  if(a<=anchors[0].age)return anchors[0].ldl;
+  if(a>=anchors[anchors.length-1].age)return anchors[anchors.length-1].ldl;
+  for(let i=1;i<anchors.length;i++){
+    if(a<=anchors[i].age){
+      const t=(a-anchors[i-1].age)/(anchors[i].age-anchors[i-1].age);
+      return anchors[i-1].ldl+t*(anchors[i].ldl-anchors[i-1].ldl);
+    }
+  }
+  return anchors[anchors.length-1].ldl;
+}
+function integrate(anchors){
+  let t=0;
+  for(let i=1;i<anchors.length;i++)t+=((anchors[i].ldl+anchors[i-1].ldl)/2)*(anchors[i].age-anchors[i-1].age);
+  return t;
+}
+// Risk category is based on the projected age at which the untreated trajectory
+// crosses 8,000 plaque years (the mean MI threshold), not on current LDL-years.
+// This correctly classifies a young person with high LDL as high-risk even
+// though their accumulated burden is still numerically low.
+function getRisk(crossAge, currentAge){
+  const ca = Math.round(crossAge);
+  if(crossAge<=currentAge)  return{label:'Extreme',   color:'#A32D2D',text:'Your cumulative LDL burden has already reached the mean MI threshold. LDL-lowering therapy is strongly indicated.'};
+  if(ca<60)                 return{label:'Extreme',   color:'#A32D2D',text:`At your current LDL, you are projected to reach the mean MI threshold at age ${ca}. Aggressive LDL-lowering is strongly recommended.`};
+  if(ca<70)                 return{label:'High',      color:'#D85A30',text:`At your current LDL, you are projected to reach the mean MI threshold at age ${ca}. Statin therapy and lifestyle modification are supported.`};
+  if(ca<80)                 return{label:'Elevated',  color:'#BA7517',text:`At your current LDL, you are projected to reach the mean MI threshold at age ${ca}. Lifestyle optimization and closer monitoring are recommended.`};
+  if(ca<90)                 return{label:'Near-ideal',color:'#3B6D11',text:`At your current LDL, you are projected to reach the mean MI threshold at age ${ca}. Continue current management.`};
+  return                          {label:'Optimal',   color:'#1D9E75',text:`At your current LDL, you are projected to reach the mean MI threshold after age ${ca}. Excellent cardiovascular risk profile.`};
+}
+function medListString(){
+  const n=MEDS.filter(m=>m.active).map(m=>m.name);
+  if(n.length===1)return n[0];
+  return n.slice(0,-1).join(', ')+' and '+n[n.length-1];
+}
+function makeTxStatement(uCA,txCA,txStart,age){
+  const meds=medListString();
+  const sp=txStart>age?`starting at age ${txStart}`:'starting now';
+  const uStr=uCA>MAX_AGE?`after age ${MAX_AGE}`:uCA<=age?'already exceeded':`age ${Math.round(uCA)}`;
+  const tStr=txCA>MAX_AGE?`after age ${MAX_AGE}`:`age ${Math.round(txCA)}`;
+  if(txCA>MAX_AGE)return`With the addition of <b>${meds}</b> (${sp}), your treated trajectory does not reach the mean MI threshold before age ${MAX_AGE} — compared to the untreated projection of ${uStr}.`;
+  if(uCA<=age)return`Your cumulative LDL burden has already exceeded the mean MI threshold. With the addition of <b>${meds}</b> (${sp}), future accumulation slows significantly.`;
+  const yg=Math.round(txCA-uCA);
+  return`With the addition of <b>${meds}</b> (${sp}), you would reach the mean MI threshold at <b>${tStr}</b> instead of <b>${uStr}</b> — delaying it by <b>${yg} year${yg===1?'':'s'}</b>.`;
+}
+function buildTxPoint(a,ly,age,ldl,txStart,mult){
+  if(a<age)return null;
+  const s=Math.max(age,txStart);
+  const lyS=ly+ldl*(s-age);
+  if(a<=s)return Math.round(ly+ldl*(a-age));
+  return Math.round(lyS+ldl*mult*(a-s));
+}
+function toggleMed(id){
+  MEDS.find(m=>m.id===id).active^=true;
+  updateMedCardStyles(); // update styles in-place — never destroy the cards
+  calculate();
+}
+// Create med cards once with stable IDs; never wipe them from calculate()
+function renderMedCards(){
+  const c=document.getElementById('tx-cards');c.innerHTML='';
+  MEDS.forEach(m=>{
+    const card=document.createElement('div');
+    card.id='tx-card-'+m.id;
+    card.className='tx-card';
+    card.onclick=()=>toggleMed(m.id);
+    card.innerHTML=`<div class="tx-name"><span class="tx-dot" id="tx-dot-${m.id}" style="background:${m.color};opacity:0.35;"></span>${m.name}</div>
+      <div class="tx-pct" id="tx-pct-${m.id}" style="color:var(--text-3);">${Math.round(m.reduction*100)}%</div>
+      <div class="tx-sub" id="tx-sub-${m.id}">LDL reduction</div>`;
+    c.appendChild(card);
+  });
+}
+// Only update visual state of existing cards — never recreates DOM
+function updateMedCardStyles(){
+  MEDS.forEach(m=>{
+    const card=document.getElementById('tx-card-'+m.id);
+    if(!card)return;
+    card.className='tx-card'+(m.active?' active':'');
+    card.style.borderColor=m.active?m.color:'';
+    const dot=document.getElementById('tx-dot-'+m.id);
+    if(dot)dot.style.opacity=m.active?'1':'0.35';
+    const pct=document.getElementById('tx-pct-'+m.id);
+    if(pct)pct.style.color=m.active?m.color:'var(--text-3)';
+    const sub=document.getElementById('tx-sub-'+m.id);
+    if(sub)sub.textContent=m.active?'active — click to remove':'LDL reduction';
+  });
+}
+function renderLegend(hasTx){
+  document.getElementById('chart-legend').innerHTML=`
+    <span><span class="l-dot" style="background:#4A90D9;"></span>History</span>
+    <span><span class="l-dash" style="border-color:#4A90D9;"></span>Untreated</span>
+    <span><span class="l-dot" style="background:#1D9E75;"></span>Optimal</span>
+    <span><span class="l-dot" style="background:#639922;"></span>Near-ideal</span>
+    <span><span class="l-dot" style="background:#BA7517;"></span>MI risk &gt;1%</span>
+    <span><span class="l-dot" style="background:#A32D2D;"></span>Mean MI age</span>
+    ${hasTx?`<span><span class="l-solid" style="background:${TX_LINE_COLOR};"></span>${medListString()}</span>`:''}`;
+}
+
+function calculate(){
+  const age=parseInt(document.getElementById('age-input').value);
+  const ldlRaw=parseFloat(document.getElementById('ldl-input').value);
+  if(isNaN(age)||isNaN(ldlRaw)||age<1||ldlRaw<=0)return;
+  const ldl=toLdl(ldlRaw);
+
+  const txAgeEl=document.getElementById('tx-age');
+  // Do NOT set txAgeEl.min here — setting min programmatically while the user
+  // is typing can force-clear the field in some browsers. Enforcement is handled
+  // on blur via onTxAgeBlur() instead.
+  let txStart=parseInt(txAgeEl.value);
+  if(isNaN(txStart)||txStart<age){txStart=age;} // clamp for computation only
+
+  const history=historyEntries.map(e=>{
+    const a=parseInt(document.getElementById('hist-age-'+e.id)?.value);
+    const l=parseFloat(document.getElementById('hist-ldl-'+e.id)?.value);
+    if(isNaN(a)||isNaN(l)||a>age)return null;
+    return{age:a,ldl:toLdl(l)};
+  }).filter(Boolean);
+
+  const anchors=buildAnchors(age,ldl,history);
+  const ly=Math.round(integrate(anchors));
+  const uCA=calcCrossAge(ly,age,ldl);
+  const chartEnd=Math.min(Math.ceil(uCA)+5,MAX_AGE);
+
+  document.getElementById('ldl-years-val').textContent=ly.toLocaleString();
+  const cEl=document.getElementById('cross-age-val');
+  const cStr=formatAge(uCA,age);
+  cEl.textContent=cStr;cEl.className='m-val'+(cStr.length>7?' sm':'');
+
+  // Age at MI risk >1% — crossing 5,000 plaque years (T.borderline)
+  const uCA5000=ly>=T.borderline?age:(ldl<=0?MAX_AGE+1:age+(T.borderline-ly)/ldl);
+  const c5El=document.getElementById('cross-age-5000-val');
+  const c5Str=formatAge(uCA5000,age);
+  c5El.textContent=c5Str;c5El.className='m-val'+(c5Str.length>7?' sm':'');
+
+  // Cumulative MI Risk: 1% at 5,000 plaque years, doubling every 1,250 thereafter
+  const miRiskEl=document.getElementById('mi-risk-val');
+  if(ly<T.borderline){
+    miRiskEl.textContent='< 1%';
+    miRiskEl.style.color='';
+  } else {
+    const doublings=(ly-T.borderline)/1250;
+    const rawRisk=1*Math.pow(2,doublings);
+    const cappedRisk=Math.min(rawRisk,99);
+    const riskStr=cappedRisk<10?cappedRisk.toFixed(1)+'%':Math.round(cappedRisk)+'%';
+    miRiskEl.textContent=riskStr;
+    // Color scales from gold → red as risk climbs
+    const t=Math.min(doublings/5,1); // saturates at ~5 doublings (32%)
+    miRiskEl.style.color=t<0.5?'#C9A84C':'#D85A30';
+  }
+
+  // Risk category and needle position are both based on threshold-crossing age
+  const risk=getRisk(uCA,age);
+  document.getElementById('risk-label').textContent=risk.label;
+  document.getElementById('risk-label').style.color=risk.color;
+  document.getElementById('risk-needle').style.left=needlePct(uCA,age).toFixed(1)+'%';
+  const ib=document.getElementById('interpretation');
+  ib.textContent=risk.text;ib.style.borderLeftColor=risk.color;
+
+  updateMedCardStyles();
+  const hasTx=anyActive();
+  const mult=combinedMultiplier();
+  const tl=ldl*mult;
+  const txCA=hasTx?calcTxCrossAge(ly,age,ldl,txStart,mult):null;
+  const wrap=document.getElementById('tx-summary-wrap');
+  if(hasTx){
+    wrap.style.display='block';
+    document.getElementById('tx-combined-pct').textContent=Math.round((1-mult)*100)+'%';
+    document.getElementById('tx-treated-ldl').textContent=unit==='mmol'?(tl/38.67).toFixed(2)+' mmol/L':Math.round(tl)+' mg/dL';
+    document.getElementById('tx-cross-age').textContent=formatAge(txCA,age);
+    const rg=txCA>MAX_AGE?(MAX_AGE-Math.min(uCA,MAX_AGE)):Math.round(txCA-Math.min(uCA,MAX_AGE));
+    document.getElementById('tx-years-gained').textContent=(rg>0?'+':'')+rg+(txCA>MAX_AGE?'+':'')+' yrs';
+    document.getElementById('tx-statement').innerHTML=makeTxStatement(uCA,txCA,txStart,age);
+  }else{wrap.style.display='none';}
+
+  renderLegend(hasTx);
+  const extEnd=hasTx&&txCA<=MAX_AGE?Math.min(Math.ceil(txCA)+3,MAX_AGE):chartEnd;
+  const finalEnd=Math.max(chartEnd,extEnd);
+  const labels=[],hS=[],pD=[],oD=[],nD=[],bD=[],eD=[],tL=[];
+  for(let a=0;a<=finalEnd;a++){
+    labels.push(a);
+    if(a<=age){
+      const cl=anchors.filter(p=>p.age<=a);
+      if(a<anchors[anchors.length-1].age)cl.push({age:a,ldl:ldlAtAge(a,anchors)});
+      hS.push(Math.round(integrate(cl)));pD.push(null);
+    }else{hS.push(null);pD.push(Math.round(ly+ldl*(a-age)));}
+    // Optimal and near-ideal reference lines diverge from current LDL-years
+    // at the patient's current age, not from zero — they show the future
+    // trajectory *from now* if LDL were at those levels going forward.
+    if(a<age){oD.push(null);nD.push(null);}
+    else{oD.push(Math.round(ly+OPTIMAL_LDL*(a-age)));nD.push(Math.round(ly+70*(a-age)));}
+    bD.push(T.borderline);
+    eD.push(T.elevated);
+    tL.push(hasTx?buildTxPoint(a,ly,age,ldl,txStart,mult):null);
+  }
+  const cfg={type:'line',data:{labels,datasets:[
+    {label:'History',data:hS,borderColor:'#4A90D9',borderWidth:2.5,pointRadius:0,tension:0.1,spanGaps:false},
+    {label:'Untreated projection',data:pD,borderColor:'#4A90D9',borderWidth:2,pointRadius:0,borderDash:[5,4],spanGaps:false},
+    {label:'Optimal (LDL 55)',data:oD,borderColor:'#1D9E75',borderWidth:1,pointRadius:0,borderDash:[4,4]},
+    {label:'Near-ideal (LDL 70)',data:nD,borderColor:'#639922',borderWidth:1,pointRadius:0,borderDash:[2,3]},
+    {label:'Risk of MI >1%',data:bD,borderColor:'#BA7517',borderWidth:1,pointRadius:0,borderDash:[3,3]},
+    {label:'Mean MI age',data:eD,borderColor:'#A32D2D',borderWidth:1,pointRadius:0,borderDash:[3,3]},
+    {label:hasTx?medListString():'Treatment',data:tL,borderColor:TX_LINE_COLOR,borderWidth:2.5,pointRadius:0,tension:0.1,spanGaps:false},
+  ]},options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{
+      mode:'index',intersect:false,
+      backgroundColor:'rgba(15,22,40,0.95)',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,
+      titleColor:'#EEE9E0',bodyColor:'#8A97B8',padding:12,
+      filter:i=>{
+        if([4,5].includes(i.datasetIndex))return false;
+        if(i.datasetIndex===6&&!hasTx)return false;
+        if(i.raw==null)return false;return true;
+      },
+      callbacks:{
+        title:i=>'Age '+i[0].label,
+        label:i=>i.dataset.label+': '+i.raw.toLocaleString()+' plaque yrs',
+      }
+    }},
+    scales:{
+      x:{title:{display:true,text:'Age (years)',color:'#4D5C7A',font:{size:11,family:"'adobe-garamond-pro','Adobe Garamond Pro',Garamond,Georgia,serif"}},
+         ticks:{color:'#4D5C7A',font:{size:11},callback:(v,i)=>i%10===0?i:null},
+         grid:{color:'rgba(255,255,255,0.04)'},border:{color:'rgba(255,255,255,0.07)'}},
+      y:{title:{display:true,text:'Plaque Years (mg/dL × yrs)',color:'#4D5C7A',font:{size:11,family:"'adobe-garamond-pro','Adobe Garamond Pro',Garamond,Georgia,serif"}},
+         ticks:{color:'#4D5C7A',font:{size:11},callback:v=>v.toLocaleString()},
+         grid:{color:'rgba(255,255,255,0.04)'},border:{color:'rgba(255,255,255,0.07)'}},
+    }
+  }};
+  if(chart)chart.destroy();
+  chart=new Chart(document.getElementById('exposureChart'),cfg);
+}
+
+renderMedCards();
+calculate();
+</script>
+</body>
+</html>
